@@ -54,6 +54,8 @@ class Session:
         self._timeout = timeout
         self._proxy = proxy
 
+        self._httpx_kwargs = httpx_kwargs
+
         self._client = httpx.AsyncClient(
             headers=headers,
             cookies=cookies,
@@ -87,16 +89,16 @@ class Session:
         Returns:
             Response: Httpx response object
         """
-        client = httpx.AsyncClient(
+        async with httpx.AsyncClient(
             headers=self._headers,
             cookies=self._cookies,
             proxy=self._proxy,
             timeout=self._timeout,
-            **kwargs,
-        )
-        response = await client.get(url, params=params)
-        response.raise_for_status()
-        return self._validate_response(response)
+            **{**self._httpx_kwargs, **kwargs},
+        ) as client:
+            response = await client.get(url, params=params)
+            response.raise_for_status()
+            return self._validate_response(response)
 
     async def get_from_api(self, *args, **kwargs) -> dict:
         """Fetch data from api and extract the `data` field from the response

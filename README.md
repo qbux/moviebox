@@ -685,6 +685,34 @@ python -m moviebox_api download-movie "Avatar"
 moviebox download-movie "Avatar"
 ```
 
+### Timeout and Retry Configuration
+
+If you experience `ConnectTimeout` errors (e.g. when the default mirror host `h5.aoneroom.com` is slow or unreachable), you can tune the HTTP timeouts and connection retries directly from the CLI:
+
+| Option | Default | Description |
+|---|---|---|
+| `--connect-timeout` | `20.0` | Seconds to wait while establishing the TCP/TLS connection |
+| `--read-timeout` | `60.0` | Seconds to wait for data after the connection is established |
+| `--write-timeout` | `20.0` | Seconds to wait while sending request data |
+| `--pool-timeout` | `20.0` | Seconds to wait to acquire a connection from the pool |
+| `--connect-retries` | `5` | Number of connection-level retries on failure |
+| `--retry-backoff` | `0.6` | Backoff factor for connection retries (reserved for future use) |
+
+**Example — increase connect timeout and retries:**
+
+```sh
+moviebox download-series "Teen Titans" -s 1 -e 1 -q best --caption \
+  --connect-timeout 40 --read-timeout 120 --connect-retries 10
+```
+
+**Example — download movie with custom timeouts:**
+
+```sh
+moviebox download-movie "Avatar" --connect-timeout 30 --read-timeout 90
+```
+
+If timeouts persist, try switching to a different mirror host (see [Using Mirror Hosts](#using-mirror-hosts) above).
+
 ## Usage Tips
 
 ### Grouping Episodes
