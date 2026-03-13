@@ -1,5 +1,5 @@
 [project]
-name = "moviebox-api"
+name = "moviebox-cli"
 version = "0.3.5"
 description = "Unofficial wrapper for moviebox.ph - search, discover and download movies, tv-series and their subtitles."
 readme = "README.md"
