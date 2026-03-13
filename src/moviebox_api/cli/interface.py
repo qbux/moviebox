@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 import click
+import httpx
 
 from moviebox_api import __version__
 from moviebox_api.cli.downloader import Downloader
@@ -26,13 +27,20 @@ from moviebox_api.cli.interactive import run_interactive_menu
 from moviebox_api.constants import (
     CURRENT_WORKING_DIR,
     DEFAULT_CHUNK_SIZE,
+    DEFAULT_CONNECT_RETRIES,
+    DEFAULT_CONNECT_TIMEOUT,
+    DEFAULT_POOL_TIMEOUT,
+    DEFAULT_READ_TIMEOUT,
     DEFAULT_READ_TIMEOUT_ATTEMPTS,
+    DEFAULT_RETRY_BACKOFF,
     DEFAULT_TASKS,
     DEFAULT_TASKS_LIMIT,
+    DEFAULT_WRITE_TIMEOUT,
     DOWNLOAD_PART_EXTENSION,
     DOWNLOAD_QUALITIES,
     DownloadMode,
 )
+from moviebox_api.core import Session
 from moviebox_api.download import (
     CaptionFileDownloader,
     MediaFileDownloader,
@@ -251,6 +259,48 @@ def moviebox():
     is_flag=True,
     help="Do not prompt for movie confirmation",
 )
+@click.option(
+    "--connect-timeout",
+    type=click.FLOAT,
+    help="HTTP connect timeout in seconds",
+    default=DEFAULT_CONNECT_TIMEOUT,
+    show_default=True,
+)
+@click.option(
+    "--read-timeout",
+    type=click.FLOAT,
+    help="HTTP read timeout in seconds",
+    default=DEFAULT_READ_TIMEOUT,
+    show_default=True,
+)
+@click.option(
+    "--write-timeout",
+    type=click.FLOAT,
+    help="HTTP write timeout in seconds",
+    default=DEFAULT_WRITE_TIMEOUT,
+    show_default=True,
+)
+@click.option(
+    "--pool-timeout",
+    type=click.FLOAT,
+    help="HTTP connection-pool acquire timeout in seconds",
+    default=DEFAULT_POOL_TIMEOUT,
+    show_default=True,
+)
+@click.option(
+    "--connect-retries",
+    type=click.INT,
+    help="Number of connection-level retries",
+    default=DEFAULT_CONNECT_RETRIES,
+    show_default=True,
+)
+@click.option(
+    "--retry-backoff",
+    type=click.FLOAT,
+    help="Exponential backoff factor for connection retries (reserved for future use)",
+    default=DEFAULT_RETRY_BACKOFF,
+    show_default=True,
+)
 @click.help_option("-h", "--help")
 def download_movie_command(
     title: str,
@@ -268,13 +318,27 @@ def download_movie_command(
     quiet: bool,
     yes: bool,
     stream_via: bool = False,
+    connect_timeout: float = DEFAULT_CONNECT_TIMEOUT,
+    read_timeout: float = DEFAULT_READ_TIMEOUT,
+    write_timeout: float = DEFAULT_WRITE_TIMEOUT,
+    pool_timeout: float = DEFAULT_POOL_TIMEOUT,
+    connect_retries: int = DEFAULT_CONNECT_RETRIES,
+    retry_backoff: float = DEFAULT_RETRY_BACKOFF,
     **download_runner_params,
 ):
     """Search and download or stream movie."""
 
     prepare_start(quiet, verbose=verbose)
 
-    downloader = Downloader()
+    timeout = httpx.Timeout(
+        connect=connect_timeout,
+        read=read_timeout,
+        write=write_timeout,
+        pool=pool_timeout,
+    )
+    transport = httpx.AsyncHTTPTransport(retries=connect_retries)
+    session = Session(timeout=timeout, transport=transport)
+    downloader = Downloader(session=session)
     get_event_loop().run_until_complete(
         downloader.download_movie(
             title,
@@ -529,6 +593,48 @@ def download_movie_command(
     is_flag=True,
     help="Do not prompt for tv-series confirmation",
 )
+@click.option(
+    "--connect-timeout",
+    type=click.FLOAT,
+    help="HTTP connect timeout in seconds",
+    default=DEFAULT_CONNECT_TIMEOUT,
+    show_default=True,
+)
+@click.option(
+    "--read-timeout",
+    type=click.FLOAT,
+    help="HTTP read timeout in seconds",
+    default=DEFAULT_READ_TIMEOUT,
+    show_default=True,
+)
+@click.option(
+    "--write-timeout",
+    type=click.FLOAT,
+    help="HTTP write timeout in seconds",
+    default=DEFAULT_WRITE_TIMEOUT,
+    show_default=True,
+)
+@click.option(
+    "--pool-timeout",
+    type=click.FLOAT,
+    help="HTTP connection-pool acquire timeout in seconds",
+    default=DEFAULT_POOL_TIMEOUT,
+    show_default=True,
+)
+@click.option(
+    "--connect-retries",
+    type=click.INT,
+    help="Number of connection-level retries",
+    default=DEFAULT_CONNECT_RETRIES,
+    show_default=True,
+)
+@click.option(
+    "--retry-backoff",
+    type=click.FLOAT,
+    help="Exponential backoff factor for connection retries (reserved for future use)",
+    default=DEFAULT_RETRY_BACKOFF,
+    show_default=True,
+)
 @click.help_option("-h", "--help")
 def download_tv_series_command(
     title: str,
@@ -551,13 +657,27 @@ def download_tv_series_command(
     yes: bool,
     stream_via: str | None,
     auto_mode: bool,
+    connect_timeout: float = DEFAULT_CONNECT_TIMEOUT,
+    read_timeout: float = DEFAULT_READ_TIMEOUT,
+    write_timeout: float = DEFAULT_WRITE_TIMEOUT,
+    pool_timeout: float = DEFAULT_POOL_TIMEOUT,
+    connect_retries: int = DEFAULT_CONNECT_RETRIES,
+    retry_backoff: float = DEFAULT_RETRY_BACKOFF,
     **download_runner_params,
 ):
     """Search and download or stream tv series."""
 
     prepare_start(quiet, verbose=verbose)
 
-    downloader = Downloader()
+    timeout = httpx.Timeout(
+        connect=connect_timeout,
+        read=read_timeout,
+        write=write_timeout,
+        pool=pool_timeout,
+    )
+    transport = httpx.AsyncHTTPTransport(retries=connect_retries)
+    session = Session(timeout=timeout, transport=transport)
+    downloader = Downloader(session=session)
     get_event_loop().run_until_complete(
         downloader.download_tv_series(
             title,

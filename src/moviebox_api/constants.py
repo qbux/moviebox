@@ -98,6 +98,24 @@ ITEM_DETAILS_PATH = "/detail"
 DEFAULT_TASKS = 5
 """Default number of connections for download"""
 
+DEFAULT_CONNECT_TIMEOUT: float = 20.0
+"""Default HTTP connect timeout in seconds"""
+
+DEFAULT_READ_TIMEOUT: float = 60.0
+"""Default HTTP read timeout in seconds"""
+
+DEFAULT_WRITE_TIMEOUT: float = 20.0
+"""Default HTTP write timeout in seconds"""
+
+DEFAULT_POOL_TIMEOUT: float = 20.0
+"""Default HTTP connection-pool acquire timeout in seconds"""
+
+DEFAULT_CONNECT_RETRIES: int = 5
+"""Default number of connection-level retries"""
+
+DEFAULT_RETRY_BACKOFF: float = 0.6
+"""Default exponential backoff factor for connection retries"""
+
 
 class SubjectType(IntEnum):
     """Content types mapped to their integer representatives"""

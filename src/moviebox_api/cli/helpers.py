@@ -193,12 +193,13 @@ def process_download_runner_params(params: dict) -> dict:
     return params
 
 
-def show_any_help(exception: Exception, exception_msg: str) -> int:
+def show_any_help(exception: Exception, exception_msg: str, connect_timeout: float | None = None) -> int:
     """Process exception and suggest solution if exists.
 
     Args:
         exception (Exception): Exact exception encountered.
         exception_msg (str): Exception message
+        connect_timeout (float | None, optional): Configured connect timeout in seconds. Defaults to None.
 
     Returns:
         int: Exit status code
@@ -206,7 +207,15 @@ def show_any_help(exception: Exception, exception_msg: str) -> int:
     exit_code = 1
 
     if isinstance(exception, ConnectTimeout):
-        logging.info("Internet connection request has timed out. Check your connection and retry.")
+        timeout_info = f" ({connect_timeout}s)" if connect_timeout is not None else ""
+        example_host = random.choice(MIRROR_HOSTS)
+        logging.info(
+            f"Internet connection request has timed out{timeout_info}. Check your connection and retry.\n"
+            "If the problem persists, try a different mirror host by setting the "
+            f'"{ENVIRONMENT_HOST_KEY}" environment variable.\n'
+            f"For instance: In *nix systems you might run 'export {ENVIRONMENT_HOST_KEY}=\"{example_host}\"'"
+            f' while in Windows: "set {ENVIRONMENT_HOST_KEY}={example_host}"'
+        )
 
     elif isinstance(exception, HTTPStatusError):
         match exception.response.status_code:
